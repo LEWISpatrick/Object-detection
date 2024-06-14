@@ -4,24 +4,31 @@ import tensorflow as tf
 
 # Load the pre-trained model
 model_dir = 'ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8/saved_model'
-detect_fn = tf.saved_model.load(model_dir)
+try:
+    detect_fn = tf.saved_model.load(model_dir)
+except Exception as e:
+    print(f"Error loading the model: {e}")
+    exit()
 
 def list_cameras():
     index = 0
-    arr = []
+    camera_indices = []
     while True:
         cap = cv2.VideoCapture(index)
         if not cap.read()[0]:
             break
         else:
-            arr.append(index)
+            camera_indices.append(index)
         cap.release()
         index += 1
-    return arr
+    return camera_indices
 
 def select_camera(preferred_index=1):
     camera_indices = list_cameras()
     print("Available camera indices:", camera_indices)
+    if not camera_indices:
+        print("No cameras found.")
+        return -1
     if preferred_index in camera_indices:
         return preferred_index
 
@@ -72,10 +79,9 @@ def process_frame(frame):
 
     return frame
 
+# Capture and process frames
 while True:
-    # Capture frame-by-frame
     ret, frame = cap.read()
-
     if not ret:
         break
 
@@ -89,8 +95,6 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-# When everything done, release the video capture object
+# Release the video capture object and close windows
 cap.release()
-
-# Close all OpenCV windows
 cv2.destroyAllWindows()
