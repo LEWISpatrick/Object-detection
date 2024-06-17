@@ -10,6 +10,22 @@ except Exception as e:
     print(f"Error loading the model: {e}")
     exit()
 
+# COCO dataset class names
+class_names = [
+    'background', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train',
+    'truck', 'boat', 'traffic light', 'fire hydrant', 'street sign', 'stop sign',
+    'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant',
+    'bear', 'zebra', 'giraffe', 'hat', 'backpack', 'umbrella', 'shoe', 'eye glasses',
+    'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite',
+    'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
+    'bottle', 'plate', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana',
+    'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut',
+    'cake', 'chair', 'couch', 'potted plant', 'bed', 'mirror', 'dining table', 'window',
+    'desk', 'toilet', 'door', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone',
+    'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'blender', 'book', 'clock',
+    'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush', 'toilet paper', 'hand'
+]
+
 def list_cameras():
     index = 0
     camera_indices = []
@@ -76,6 +92,14 @@ def process_frame(frame):
             start_point = (int(xmin * width), int(ymin * height))
             end_point = (int(xmax * width), int(ymax * height))
             cv2.rectangle(frame, start_point, end_point, (0, 255, 0), 2)
+
+            # Get class name
+            class_id = detection_classes[i]
+            class_name = class_names[class_id]
+
+            # Put class name text on the frame
+            label = f"{class_name}: {detection_scores[i]:.2f}"
+            cv2.putText(frame, label, (start_point[0], start_point[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
     return frame
 
