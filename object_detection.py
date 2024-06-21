@@ -1,6 +1,15 @@
 import cv2
 import numpy as np
 import tensorflow as tf
+import pygame
+from pygame import mixer
+import time
+
+# Initialize pygame mixer
+mixer.init()
+
+# Load the sound file
+sound = mixer.Sound('./GET-OUT.mp3')
 
 # Load the pre-trained model
 model_dir = 'ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8/saved_model'
@@ -73,8 +82,13 @@ if not cap.isOpened():
     print("Error: Could not open video stream or file")
     exit()
 
+# Variable to store the time when a person was last detected
+last_detection_time = None
+
 # Function to process frames
 def process_frame(frame):
+    global last_detection_time
+
     # Convert frame to tensor
     input_tensor = tf.convert_to_tensor(np.expand_dims(frame, 0), dtype=tf.uint8)
     detections = detect_fn(input_tensor)
@@ -85,6 +99,7 @@ def process_frame(frame):
     detection_scores = detections['detection_scores'][0].numpy()
 
     height, width, _ = frame.shape
+    person_detected = False
     for i in range(len(detection_boxes)):
         if detection_scores[i] > 0.5:  # Only consider high-confidence detections
             box = detection_boxes[i]
@@ -100,6 +115,16 @@ def process_frame(frame):
             # Put class name text on the frame
             label = f"{class_name}: {detection_scores[i]:.2f}"
             cv2.putText(frame, label, (start_point[0], start_point[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+            # Check if the detected object is a person
+            if class_name == 'person':
+                person_detected = True
+
+    if person_detected:
+        # If a person is detected, play the sound if it has been more than 3 seconds since the last detection
+        if last_detection_time is None or time.time() - last_detection_time > 3:
+            sound.play()
+            last_detection_time = time.time()
 
     return frame
 
